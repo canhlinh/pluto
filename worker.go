@@ -80,9 +80,6 @@ func (w *worker) download() (io.ReadCloser, error) {
 
 	resp, err := client.Do(req)
 	if err != nil {
-
-	 
-
 		return nil, fmt.Errorf("error in sending download request: %v", err)
 	}
 
@@ -90,6 +87,5 @@ func (w *worker) download() (io.ReadCloser, error) {
 		return nil, fmt.Errorf("status code: %d", resp.StatusCode)
 	}
 
-	 
 	return resp.Body, nil
 }
