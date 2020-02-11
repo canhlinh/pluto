@@ -14,7 +14,6 @@ import (
 	"sync"
 	"sync/atomic"
 
-	
 	"time"
 )
 
@@ -81,7 +80,7 @@ func New(up *url.URL, headers []string, connections uint, verbose bool) (*Pluto,
 	}
 
 	if !p.MetaData.MultipartSupported {
-		 
+
 		p.connections = 1
 	}
 
@@ -273,8 +272,6 @@ func (p *Pluto) fetchMeta(u *url.URL, headers []string) error {
 	}
 
 	msupported := true
-
-	 
 
 	resp, err = http.Get(u.String())
 	if err != nil {

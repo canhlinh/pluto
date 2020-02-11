@@ -9,6 +9,7 @@ import (
 	"os"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/ishanjain28/pluto/pluto"
 )
@@ -17,6 +18,7 @@ func setupHTTPServer() *http.Server {
 	srv := &http.Server{Addr: "127.0.0.1:5050"}
 
 	http.HandleFunc("/testfile", func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(3 * time.Second)
 		http.ServeFile(w, r, "fixtures/testfile")
 	})
 	go func() {
@@ -29,12 +31,9 @@ func setupHTTPServer() *http.Server {
 }
 
 func TestMain(m *testing.M) {
-	srv := setupHTTPServer()
+	setupHTTPServer()
 
-	retCode := m.Run()
-	srv.Shutdown(nil)
-
-	os.Exit(retCode)
+	os.Exit(m.Run())
 }
 
 func TestFetchMeta(t *testing.T) {
@@ -67,7 +66,14 @@ func TestDownload(t *testing.T) {
 		t.Fatalf("unable to create temp file: %v", err)
 	}
 	defer f.Close()
-	r, err := p.Download(context.Background(), f)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		time.Sleep(time.Second * 1)
+		cancel()
+	}()
+
+	r, err := p.Download(ctx, f)
 	if err != nil {
 		t.Fatalf("unable to download file: %v", err)
 	}
