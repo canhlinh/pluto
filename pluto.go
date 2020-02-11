@@ -198,15 +198,8 @@ func (p *Pluto) startDownload() error {
 			for {
 				downloadPart, err := w.download()
 				if err != nil {
-					if err.Error() == "status code: 400" || err.Error() == "status code: 500" || err.Error() == ErrOverflow {
-						cerr <- err
-						return
-					}
-
-					if p.verbose {
-						log.Println(err)
-					}
-					continue
+					cerr <- err
+					return
 				}
 
 				d, err := w.copyAt(downloadPart, &downloaded)
