@@ -37,7 +37,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestFetchMeta(t *testing.T) {
-	u, _ := url.Parse("http://127.0.0.1:5050/testfile")
+	u, _ := url.Parse("https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_20mb.mp4")
 
 	resp, err := http.Head(u.String())
 	if err != nil {
@@ -56,8 +56,8 @@ func TestFetchMeta(t *testing.T) {
 }
 
 func TestDownload(t *testing.T) {
-	u, _ := url.Parse("http://127.0.0.1:5050/testfile")
-	p, err := pluto.New(u, []string{}, 1, false)
+	u, _ := url.Parse("https://video.openedu.tw/Examples/big_buck_bunny_720p_30mb.mp4")
+	p, err := pluto.New(u, []string{}, 3, false)
 	if err != nil {
 		t.Fatalf("unable to create pluto instance: %v", err)
 	}
@@ -69,7 +69,7 @@ func TestDownload(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
-		time.Sleep(time.Second * 1)
+		time.Sleep(time.Second * 2)
 		cancel()
 	}()
 
