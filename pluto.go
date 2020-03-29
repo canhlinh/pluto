@@ -148,10 +148,8 @@ func (p *Pluto) startDownload() error {
 
 	var wg sync.WaitGroup
 	wg.Add(len(p.workers))
-	var err error
 
-	errdl := make(chan error, 1)
-	errcopy := make(chan error, 1)
+	cerr := make(chan error, len(p.workers))
 
 	var downloaded uint64
 
@@ -186,13 +184,11 @@ func (p *Pluto) startDownload() error {
 
 	for _, w := range p.workers {
 		// This loop keeps trying to download a file if a recoverable error occurs
-		go func(w *worker, wgroup *sync.WaitGroup, dl *uint64, cerr, dlerr chan error) {
+		go func(w *worker, wgroup *sync.WaitGroup, dl *uint64, cerr chan error) {
 
 			defer func() {
-
 				wgroup.Done()
 				cerr <- nil
-				dlerr <- nil
 			}()
 
 			for {
@@ -215,18 +211,13 @@ func (p *Pluto) startDownload() error {
 				break
 			}
 
-		}(w, &wg, &downloaded, errcopy, errdl)
+		}(w, &wg, &downloaded, cerr)
 	}
 
-	err = <-errcopy
-	if err != nil {
+	if err := <-cerr; err != nil {
 		return err
 	}
 
-	err = <-errdl
-	if err != nil {
-		return err
-	}
 	wg.Wait()
 	return nil
 }
