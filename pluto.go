@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"mime"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -262,25 +263,22 @@ func (p *Pluto) fetchMeta(u *url.URL, headers []string) error {
 		return fmt.Errorf("error in sending GET request: %v", err)
 	}
 
-	name := ""
-
-	dispositionHeader := resp.Header.Get("Content-Disposition")
-
-	if dispositionHeader != "" {
-		cDispose := strings.Split(dispositionHeader, "filename=")
-
-		if len(cDispose) > 0 {
-			cdfilename := cDispose[1]
-			cdfilename = cdfilename[1:]
-			cdfilename = cdfilename[:len(cdfilename)-1]
-			name = cdfilename
+	filename := ""
+	if dispositionHeader := resp.Header.Get("Content-Disposition"); dispositionHeader != "" {
+		disposition, params, err := mime.ParseMediaType(dispositionHeader)
+		if err == nil {
+			if name, ok := params["filename"]; ok {
+				filename = name
+			} else {
+				filename = disposition
+			}
 		}
 	}
 
 	resp.Body.Close()
 	p.MetaData = fileMetaData{
 		Size:               uint64(size),
-		Name:               name,
+		Name:               filename,
 		url:                u,
 		MultipartSupported: msupported,
 	}
