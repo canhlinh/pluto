@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"net/url"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -95,8 +94,6 @@ func New(up *url.URL, headers []string, connections uint, verbose bool) (*Pluto,
 // And if an error occurs which the program can not recover from, it'll return that error
 func (p *Pluto) Download(ctx context.Context, w io.WriterAt) (*Result, error) {
 	p.startTime = time.Now()
-	// Limit number of CPUs it can use
-	runtime.GOMAXPROCS(runtime.NumCPU() / 2)
 
 	perPartLimit := p.MetaData.Size / uint64(p.connections)
 	difference := p.MetaData.Size % uint64(p.connections)
@@ -268,9 +265,9 @@ func (p *Pluto) fetchMeta(u *url.URL, headers []string) error {
 		disposition, params, err := mime.ParseMediaType(dispositionHeader)
 		if err == nil {
 			if name, ok := params["filename"]; ok {
-				filename = name
+				filename = strings.TrimSpace(name)
 			} else {
-				filename = disposition
+				filename = strings.TrimSpace(disposition)
 			}
 		}
 	}

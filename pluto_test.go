@@ -67,13 +67,7 @@ func TestDownload(t *testing.T) {
 	}
 	defer f.Close()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	go func() {
-		time.Sleep(time.Second * 2)
-		cancel()
-	}()
-
-	r, err := p.Download(ctx, f)
+	r, err := p.Download(context.Background(), f)
 	if err != nil {
 		t.Fatalf("unable to download file: %v", err)
 	}
