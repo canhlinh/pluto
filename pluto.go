@@ -55,7 +55,7 @@ type Pluto struct {
 	workers     []*worker
 }
 
-//Result is the download results
+// Result is the download results
 type Result struct {
 	FileName  string
 	Size      uint64
@@ -63,7 +63,7 @@ type Result struct {
 	TimeTaken time.Duration
 }
 
-//New returns a pluto instance
+// New returns a pluto instance
 func New(up *url.URL, headers []string, connections uint, verbose bool) (*Pluto, error) {
 
 	p := &Pluto{
@@ -231,7 +231,7 @@ func (p *Pluto) fetchMeta(u *url.URL, headers []string) error {
 		vsp := strings.Index(v, ":")
 
 		key := v[:vsp]
-		value := v[vsp:]
+		value := v[vsp+1:]
 
 		req.Header.Set(key, value)
 	}

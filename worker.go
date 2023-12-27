@@ -73,7 +73,7 @@ func (w *worker) download() (io.ReadCloser, error) {
 		vsp := strings.Index(v, ":")
 
 		key := v[:vsp]
-		value := v[vsp:]
+		value := v[vsp+1:]
 
 		req.Header.Set(key, value)
 	}
