@@ -18,6 +18,7 @@ type worker struct {
 	headers []string
 	verbose bool
 	ctx     context.Context
+	client  *http.Client
 }
 
 // copyAt reads 64 kilobytes from source and copies them to destination at a given offset
@@ -60,8 +61,6 @@ func (w *worker) copyAt(src io.Reader, dlcounter *uint64) (uint64, error) {
 }
 
 func (w *worker) download() (io.ReadCloser, error) {
-
-	client := &http.Client{}
 	req, err := http.NewRequest("GET", w.url.String(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("error in creating GET request: %v", err)
@@ -78,7 +77,7 @@ func (w *worker) download() (io.ReadCloser, error) {
 		req.Header.Set(key, value)
 	}
 
-	resp, err := client.Do(req)
+	resp, err := w.client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("error in sending download request: %v", err)
 	}

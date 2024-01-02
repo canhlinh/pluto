@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"mime"
+	"net"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -53,6 +54,7 @@ type Pluto struct {
 	MetaData    fileMetaData
 	startTime   time.Time
 	workers     []*worker
+	client      *http.Client
 }
 
 // Result is the download results
@@ -63,8 +65,23 @@ type Result struct {
 	TimeTaken time.Duration
 }
 
+type Proxy struct {
+	Host string `json:"host"`
+	Port int    `json:"port"`
+	User string `json:"user"`
+	Pass string `json:"pass"`
+}
+
+func (p Proxy) Name() string {
+	return "Proxy"
+}
+
+type Option interface {
+	Name() string
+}
+
 // New returns a pluto instance
-func New(up *url.URL, headers []string, connections uint, verbose bool) (*Pluto, error) {
+func New(up *url.URL, headers []string, connections uint, verbose bool, proxy *Proxy) (*Pluto, error) {
 
 	p := &Pluto{
 		connections: connections,
@@ -72,6 +89,27 @@ func New(up *url.URL, headers []string, connections uint, verbose bool) (*Pluto,
 		verbose:     verbose,
 		StatsChan:   make(chan *Stats),
 		Finished:    make(chan struct{}),
+		client:      &http.Client{},
+	}
+	if proxy != nil {
+		p.client = &http.Client{
+			Transport: &http.Transport{
+				Proxy: http.ProxyURL(&url.URL{
+					Host: fmt.Sprintf("%s:%d", proxy.Host, proxy.Port),
+					User: url.UserPassword(proxy.User, proxy.Pass),
+				}),
+				DialContext: (&net.Dialer{
+					Timeout:   10 * time.Second,
+					KeepAlive: 30 * time.Second,
+					DualStack: true,
+				}).DialContext,
+				ForceAttemptHTTP2:     true,
+				MaxIdleConns:          100,
+				IdleConnTimeout:       90 * time.Second,
+				TLSHandshakeTimeout:   10 * time.Second,
+				ExpectContinueTimeout: 1 * time.Second,
+			},
+		}
 	}
 
 	err := p.fetchMeta(up, headers)
@@ -80,7 +118,6 @@ func New(up *url.URL, headers []string, connections uint, verbose bool) (*Pluto,
 	}
 
 	if !p.MetaData.MultipartSupported {
-
 		p.connections = 1
 	}
 
@@ -116,6 +153,7 @@ func (p *Pluto) Download(ctx context.Context, w io.WriterAt) (*Result, error) {
 			headers: p.headers,
 			verbose: p.verbose,
 			ctx:     ctx,
+			client:  p.client,
 		}
 	}
 
@@ -236,9 +274,7 @@ func (p *Pluto) fetchMeta(u *url.URL, headers []string) error {
 		req.Header.Set(key, value)
 	}
 
-	client := &http.Client{}
-
-	resp, err := client.Do(req)
+	resp, err := p.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("error in sending HEAD request: %v", err)
 	}

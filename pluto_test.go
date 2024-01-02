@@ -45,7 +45,7 @@ func TestFetchMeta(t *testing.T) {
 
 	}
 	defer resp.Body.Close()
-	p, err := pluto.New(u, []string{}, 1, false)
+	p, err := pluto.New(u, []string{}, 1, false, nil)
 	if err != nil {
 		t.Fatalf("unable to create pluto instance: %v", err)
 	}
@@ -57,7 +57,7 @@ func TestFetchMeta(t *testing.T) {
 
 func TestDownload(t *testing.T) {
 	u, _ := url.Parse("https://video.openedu.tw/Examples/big_buck_bunny_720p_30mb.mp4")
-	p, err := pluto.New(u, []string{}, 3, false)
+	p, err := pluto.New(u, []string{}, 3, false, nil)
 	if err != nil {
 		t.Fatalf("unable to create pluto instance: %v", err)
 	}
